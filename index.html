@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SKY // DEFENDER // TAP</title>
+    <title>SKY // DEFENDER // AUDIO</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #00f3ff;   /* Cyan */
-            --accent: #bc13fe;    /* Purple */
-            --danger: #ff003c;    /* Red */
+            --primary: #00f3ff;
+            --accent: #bc13fe;
+            --danger: #ff003c;
             --glass: rgba(10, 15, 20, 0.85);
             --border: rgba(0, 243, 255, 0.3);
         }
@@ -18,21 +18,18 @@
             margin: 0; overflow: hidden; background-color: #020202;
             font-family: 'Rajdhani', sans-serif; color: white;
             touch-action: none; user-select: none;
-            -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* --- BACKGROUND GRID --- */
         .grid-bg {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: 
                 linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
             background-size: 50px 50px;
-            perspective: 500px;
             z-index: -1;
         }
 
-        /* --- UI CONTAINER --- */
         #ui-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 50;
@@ -40,23 +37,15 @@
             padding: 20px; box-sizing: border-box;
         }
 
-        /* --- TOP HUD --- */
         .hud-top {
-            display: grid; 
-            grid-template-columns: 1fr 1fr 1fr;
-            align-items: start;
-            width: 100%;
-            gap: 10px;
+            display: grid; grid-template-columns: 1fr 1fr 1fr;
+            align-items: start; width: 100%; gap: 10px;
         }
 
         .stat-panel {
-            background: var(--glass);
-            border: 1px solid var(--border);
-            padding: 10px;
-            border-radius: 4px;
-            display: flex; flex-direction: column;
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
-            backdrop-filter: blur(5px);
+            background: var(--glass); border: 1px solid var(--border);
+            padding: 10px; border-radius: 4px; display: flex; flex-direction: column;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1); backdrop-filter: blur(5px);
         }
 
         .stat-label { font-size: 0.8rem; color: #888; letter-spacing: 1px; text-transform: uppercase; }
@@ -66,17 +55,9 @@
         .high-score-box { text-align: center; }
         .health-box { text-align: right; }
 
-        /* HEAT GAUGE */
-        .heat-wrapper {
-            margin-top: 5px; width: 100%; height: 4px; background: #333;
-            border-radius: 2px; overflow: hidden;
-        }
-        .heat-fill {
-            height: 100%; width: 0%; background: var(--primary);
-            transition: width 0.1s linear;
-        }
+        .heat-wrapper { margin-top: 5px; width: 100%; height: 4px; background: #333; border-radius: 2px; overflow: hidden; }
+        .heat-fill { height: 100%; width: 0%; background: var(--primary); transition: width 0.1s linear; }
 
-        /* --- MENUS --- */
         .menu-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(2, 2, 2, 0.9); z-index: 100;
@@ -92,9 +73,7 @@
             filter: drop-shadow(0 0 10px var(--primary));
         }
 
-        .sub-text {
-            margin-top: 10px; font-size: 1rem; color: #aaa; letter-spacing: 2px; text-align: center;
-        }
+        .sub-text { margin-top: 10px; font-size: 1rem; color: #aaa; letter-spacing: 2px; text-align: center; }
 
         .btn {
             margin-top: 30px; padding: 15px 50px;
@@ -107,7 +86,6 @@
         
         .btn:hover { background: var(--primary); color: #000; box-shadow: 0 0 30px var(--primary); }
         .btn:active { transform: scale(0.95); }
-
         .hidden { opacity: 0; pointer-events: none; visibility: hidden; }
 
     </style>
@@ -138,7 +116,7 @@
 
     <div id="start-screen" class="menu-screen">
         <h1>Sky Defender</h1>
-        <div class="sub-text">TAP ANYWHERE TO INTERCEPT</div>
+        <div class="sub-text">TAP TO INITIALIZE SYSTEM</div>
         <button class="btn" onclick="Game.start()">ENGAGE</button>
     </div>
 
@@ -152,17 +130,40 @@
     <canvas id="canvas"></canvas>
 
 <script>
-    /** * SKY DEFENDER ENGINE V6: TAP COMMAND */
+    /** SKY DEFENDER AUDIO ENGINE */
     
-    // --- ASSETS (Detailed SVGs) ---
+    // --- AUDIO SYSTEM (Web Audio API) ---
+    const Sound = {
+        ctx: null,
+        init() {
+            if (!this.ctx) {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        },
+        playTone(type, freqStart, freqEnd, duration, vol = 0.1) {
+            if (!this.ctx) return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freqStart, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(freqEnd, this.ctx.currentTime + duration);
+            gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + duration);
+        },
+        shoot() { this.playTone('square', 800, 300, 0.1, 0.05); },
+        hit() { this.playTone('sawtooth', 200, 50, 0.1, 0.05); },
+        explode() { this.playTone('sawtooth', 150, 10, 0.3, 0.1); },
+        gameOver() { this.playTone('triangle', 300, 50, 1.0, 0.2); }
+    };
+
+    // --- ASSETS (Aliens) ---
     const ASSETS = {
-        // Detailed Fighter Jet
         player: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='0%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2300f3ff'/%3E%3Cstop offset='100%25' stop-color='%23005577'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M50 2 L65 30 L95 65 L60 60 L60 85 L70 95 L50 90 L30 95 L40 85 L40 60 L5 65 L35 30 Z' fill='url(%23g)' stroke='white' stroke-width='1.5'/%3E%3Crect x='48' y='35' width='4' height='15' fill='%23ccfeff'/%3E%3C/svg%3E",
-        
-        // Enemy 1: CLASSIC ALIEN (Green/Purple Outline)
         enemy1: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 4 C15 4 8 25 8 40 C8 55 20 62 32 62 C44 62 56 55 56 40 C56 25 49 4 32 4 Z' fill='%23111' stroke='%23bc13fe' stroke-width='2'/%3E%3Cellipse cx='22' cy='35' rx='8' ry='12' transform='rotate(15 22 35)' fill='%23bc13fe'/%3E%3Cellipse cx='42' cy='35' rx='8' ry='12' transform='rotate(-15 42 35)' fill='%23bc13fe'/%3E%3C/svg%3E",
-        
-        // Enemy 2: HEAVY UFO SAUCER
         enemy2: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cellipse cx='32' cy='40' rx='30' ry='12' fill='%23220000' stroke='%23ff003c' stroke-width='2'/%3E%3Cpath d='M17 32 Q32 10 47 32' fill='%23ff003c' opacity='0.5'/%3E%3Ccircle cx='10' cy='40' r='3' fill='%23ff003c'/%3E%3Ccircle cx='32' cy='48' r='3' fill='%23ff003c'/%3E%3Ccircle cx='54' cy='40' r='3' fill='%23ff003c'/%3E%3C/svg%3E"
     };
 
@@ -185,66 +186,33 @@
             firing: false
         },
 
-        player: { 
-            x: 0, y: 0, 
-            tx: 0, // Target X
-            tilt: 0,
-            w: 70, h: 70 
-        },
-
-        bullets: [],
-        enemies: [],
-        particles: [],
-        shake: 0,
+        player: { x: 0, y: 0, tx: 0, tilt: 0, w: 70, h: 70 },
+        bullets: [], enemies: [], particles: [], shake: 0,
 
         init() {
             this.resize();
             window.addEventListener('resize', () => this.resize());
             
-            // --- NEW INPUT LOGIC: TAP TO WARP ---
-            
-            // Mouse Interaction
-            this.canvas.addEventListener('mousedown', (e) => {
-                this.handleInput(e.clientX);
-                this.state.firing = true;
-            });
-            window.addEventListener('mouseup', () => this.state.firing = false);
-            
-            // Mouse Drag (Optional but good for desktop)
-            window.addEventListener('mousemove', (e) => {
-                if(this.state.firing) this.handleInput(e.clientX);
-            });
+            // Input Handlers
+            const startFire = (x) => { this.player.tx = x; this.state.firing = true; };
+            const moveFire = (x) => { if(this.state.firing) this.player.tx = x; };
+            const stopFire = () => { this.state.firing = false; };
 
-            // Touch Interaction
-            this.canvas.addEventListener('touchstart', (e) => {
-                e.preventDefault(); // Stop scroll
-                this.handleInput(e.touches[0].clientX);
-                this.state.firing = true;
-            }, {passive: false});
+            this.canvas.addEventListener('mousedown', (e) => startFire(e.clientX));
+            window.addEventListener('mousemove', (e) => moveFire(e.clientX));
+            window.addEventListener('mouseup', stopFire);
 
-            this.canvas.addEventListener('touchmove', (e) => {
-                e.preventDefault();
-                this.handleInput(e.touches[0].clientX);
-            }, {passive: false});
+            this.canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startFire(e.touches[0].clientX); }, {passive: false});
+            this.canvas.addEventListener('touchmove', (e) => { e.preventDefault(); moveFire(e.touches[0].clientX); }, {passive: false});
+            window.addEventListener('touchend', stopFire);
 
-            window.addEventListener('touchend', () => this.state.firing = false);
-
-            // Update Loop
+            // Loop
             const loop = () => {
-                if(this.state.active) {
-                    this.update();
-                    this.draw();
-                }
+                if(this.state.active) { this.update(); this.draw(); }
                 requestAnimationFrame(loop);
             };
             loop();
-            
             document.getElementById('ui-highscore').innerText = this.state.highScore;
-        },
-
-        // Helper to set target position
-        handleInput(x) {
-            this.player.tx = x;
         },
 
         resize() {
@@ -255,6 +223,9 @@
         },
 
         start() {
+            Sound.init();
+            if(Sound.ctx && Sound.ctx.state === 'suspended') Sound.ctx.resume();
+
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('game-over').classList.add('hidden');
             
@@ -263,6 +234,7 @@
             this.state.hp = 100;
             this.state.heat = 0;
             this.state.firing = false;
+            this.state.frame = 0;
             this.bullets = [];
             this.enemies = [];
             this.particles = [];
@@ -278,50 +250,48 @@
             const S = this.state;
             const P = this.player;
 
-            // 1. PLAYER PHYSICS (SNAP TO TAP)
-            // Faster Lerp (0.25 instead of 0.12) makes it snap to the finger faster
+            // 1. PLAYER
             let dx = P.tx - P.x;
             P.x += dx * 0.25; 
-            
-            // Dynamic Tilt (Banking)
-            let targetTilt = -(dx * 0.3); 
-            if(targetTilt > 20) targetTilt = 20;
-            if(targetTilt < -20) targetTilt = -20;
-            P.tilt += (targetTilt - P.tilt) * 0.2;
-
-            // Clamp Screen Boundaries
-            if(P.x < 30) P.x = 30;
-            if(P.x > this.width - 30) P.x = this.width - 30;
+            P.tilt += (-(dx * 0.3) - P.tilt) * 0.2;
+            if(P.x < 30) P.x = 30; if(P.x > this.width - 30) P.x = this.width - 30;
 
             // 2. SHOOTING
             if(S.firing && S.heat < 100 && S.frame % 7 === 0) {
                 this.bullets.push({ x: P.x, y: P.y - 30, w: 4, h: 20 });
                 S.heat += 5;
                 this.shake = 3;
+                Sound.shoot();
             }
-            if(!S.firing && S.heat > 0) S.heat -= 1.5; // Cooldown
+            if(!S.firing && S.heat > 0) S.heat -= 1.5;
             if(S.heat < 0) S.heat = 0;
 
-            // 3. ENEMIES
-            let rate = Math.max(20, 60 - Math.floor(S.score / 500));
-            if(S.frame % rate === 0) this.spawnEnemy();
+            // 3. ENEMY SPAWNING (Rebalanced)
+            // Start very slow (every ~150 frames), get faster as score increases, cap at 40 frames
+            let spawnRate = Math.max(40, 150 - Math.floor(S.score / 50));
+            
+            // Hard Limit: Only 8 aliens allowed on screen
+            if(S.frame % spawnRate === 0 && this.enemies.length < 8) {
+                this.spawnEnemy();
+            }
 
+            // 4. ENTITY UPDATES
             for(let i = this.enemies.length - 1; i >= 0; i--) {
                 let e = this.enemies[i];
                 e.vy += e.gravity;
                 e.y += e.vy;
 
-                // Collision with Bullet
+                // Collision
                 for(let j = this.bullets.length - 1; j >= 0; j--) {
                     let b = this.bullets[j];
-                    if(b.x > e.x - e.w/2 && b.x < e.x + e.w/2 && 
-                       b.y > e.y - e.h/2 && b.y < e.y + e.h/2) {
-                        
+                    if(b.x > e.x - e.w/2 && b.x < e.x + e.w/2 && b.y > e.y - e.h/2 && b.y < e.y + e.h/2) {
                         this.bullets.splice(j, 1);
                         e.hp--;
-                        this.createExplosion(b.x, b.y, '#fff', 5);
+                        Sound.hit();
+                        this.createExplosion(b.x, b.y, '#fff', 3);
                         
                         if(e.hp <= 0) {
+                            Sound.explode();
                             this.createExplosion(e.x, e.y, e.color, 15);
                             this.enemies.splice(i, 1);
                             S.score += e.scoreVal;
@@ -331,7 +301,6 @@
                         break;
                     }
                 }
-
                 if(e && e.y > this.height) {
                     this.enemies.splice(i, 1);
                     S.hp -= 15;
@@ -341,7 +310,6 @@
                 }
             }
 
-            // 4. BULLETS & PARTICLES
             for(let i = this.bullets.length - 1; i >= 0; i--) {
                 this.bullets[i].y -= 25;
                 if(this.bullets[i].y < -50) this.bullets.splice(i, 1);
@@ -351,81 +319,61 @@
                 p.x += p.vx; p.y += p.vy; p.life -= 0.05;
                 if(p.life <= 0) this.particles.splice(i, 1);
             }
-
             S.frame++;
         },
 
         draw() {
-            const ctx = this.ctx;
-            const w = this.width;
-            const h = this.height;
-
-            // Clear & Shake
+            const ctx = this.ctx; const w = this.width; const h = this.height;
             ctx.save();
             if(this.shake > 0) {
-                let s = this.shake;
-                ctx.translate((Math.random()-0.5)*s, (Math.random()-0.5)*s);
-                this.shake *= 0.9;
-                if(this.shake < 0.5) this.shake = 0;
+                let s = this.shake; ctx.translate((Math.random()-0.5)*s, (Math.random()-0.5)*s);
+                this.shake *= 0.9; if(this.shake < 0.5) this.shake = 0;
             }
             ctx.clearRect(0, 0, w, h);
 
-            // Draw Player
-            ctx.save();
-            ctx.translate(this.player.x, this.player.y);
+            // Player
+            ctx.save(); ctx.translate(this.player.x, this.player.y);
             ctx.rotate(this.player.tilt * Math.PI / 180); 
-            ctx.drawImage(IMG.player, -this.player.w/2, -this.player.h/2, this.player.w, this.player.h);
-            
-            // Engine Thrust
-            ctx.globalCompositeOperation = 'lighter';
-            ctx.fillStyle = '#00f3ff';
-            ctx.beginPath();
-            ctx.moveTo(-6, 30); ctx.lineTo(6, 30); ctx.lineTo(0, 50 + Math.random()*25);
-            ctx.fill();
+            ctx.drawImage(IMG.player, -35, -35, 70, 70);
+            ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#00f3ff';
+            ctx.beginPath(); ctx.moveTo(-6, 30); ctx.lineTo(6, 30); ctx.lineTo(0, 50 + Math.random()*25); ctx.fill();
             ctx.restore();
 
-            // Draw Bullets
-            ctx.fillStyle = '#00f3ff';
-            ctx.shadowColor = '#00f3ff'; ctx.shadowBlur = 10;
+            // Bullets
+            ctx.fillStyle = '#00f3ff'; ctx.shadowColor = '#00f3ff'; ctx.shadowBlur = 10;
             this.bullets.forEach(b => ctx.fillRect(b.x - b.w/2, b.y, b.w, b.h));
             ctx.shadowBlur = 0;
 
-            // Draw Enemies
-            this.enemies.forEach(e => {
-                ctx.drawImage(IMG[e.type], e.x - e.w/2, e.y - e.h/2, e.w, e.h);
-            });
+            // Enemies
+            this.enemies.forEach(e => ctx.drawImage(IMG[e.type], e.x - e.w/2, e.y - e.h/2, e.w, e.h));
 
-            // Draw Particles
+            // Particles
             this.particles.forEach(p => {
-                ctx.globalAlpha = p.life;
-                ctx.fillStyle = p.color;
-                ctx.fillRect(p.x, p.y, 4, 4);
+                ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, 4, 4);
             });
             ctx.globalAlpha = 1.0;
 
-            // Low Health Warning
+            // Low Health Red Overlay
             if(this.state.hp < 30) {
                 ctx.fillStyle = `rgba(255, 0, 60, ${0.1 + Math.sin(this.state.frame * 0.1)*0.1})`;
                 ctx.fillRect(0,0,w,h);
             }
-
             ctx.restore();
         },
 
         spawnEnemy() {
             let isHeavy = Math.random() > 0.8;
+            let scoreFactor = Math.min(this.state.score / 2000, 1); // 0 to 1 based on score
             
-            // --- UPDATED SPEED LOGIC ---
-            // Calculate a speed bonus based on score. Caps out when score is high.
-            // This creates the "Slowest -> Slow -> Fast" progression.
-            let speedBonus = Math.min(0.04, this.state.score / 8000); 
+            // GRAVITY: Start extremely low (0.015) and cap at (0.05)
+            // This makes them float initially, then get heavier as you play.
+            let gravity = 0.015 + (scoreFactor * 0.035); 
 
             this.enemies.push({
                 x: Math.random() * (this.width - 60) + 30,
                 y: -60,
                 vy: 0,
-                // Drastically reduced initial gravity for the "Slowest" feel
-                gravity: 0.002 + (Math.random() * 0.003) + speedBonus, 
+                gravity: gravity,
                 hp: isHeavy ? 4 : 1,
                 type: isHeavy ? 'enemy2' : 'enemy1',
                 color: isHeavy ? '#ff003c' : '#bc13fe',
@@ -438,11 +386,8 @@
         createExplosion(x, y, color, count) {
             for(let i=0; i<count; i++) {
                 this.particles.push({
-                    x, y,
-                    vx: (Math.random()-0.5)*12,
-                    vy: (Math.random()-0.5)*12,
-                    life: 1.0,
-                    color: color
+                    x, y, vx: (Math.random()-0.5)*12, vy: (Math.random()-0.5)*12,
+                    life: 1.0, color: color
                 });
             }
         },
@@ -459,24 +404,19 @@
 
         gameOver() {
             this.state.active = false;
+            Sound.gameOver();
             document.getElementById('final-score').innerText = this.state.score;
-            
             const newRecordMsg = document.getElementById('new-record-msg');
             if(this.state.score > this.state.highScore) {
                 this.state.highScore = this.state.score;
                 localStorage.setItem('skydef_highscore', this.state.highScore);
                 newRecordMsg.style.opacity = 1;
                 document.getElementById('ui-highscore').innerText = this.state.highScore;
-            } else {
-                newRecordMsg.style.opacity = 0;
-            }
-
+            } else { newRecordMsg.style.opacity = 0; }
             document.getElementById('game-over').classList.remove('hidden');
         }
     };
-
     Game.init();
-
 </script>
 </body>
 </html>
