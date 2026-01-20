@@ -3,31 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title> EARTH DEFENDER </title>
+    <title>EARTH DEFENDER: ELITE v2</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #00f3ff;
             --accent: #bc13fe;
+            --gold: #ffd700;
             --danger: #ff003c;
-            --glass: rgba(10, 15, 20, 0.85);
+            --glass: rgba(10, 15, 20, 0.90);
             --border: rgba(0, 243, 255, 0.3);
+            --dark: #020202;
         }
 
         body {
-            margin: 0; overflow: hidden; background-color: #020202;
+            margin: 0; overflow: hidden; background-color: var(--dark);
             font-family: 'Rajdhani', sans-serif; color: white;
             touch-action: none; user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
 
+        /* Dynamic Grid Background */
         .grid-bg {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: 
-                linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+                linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
             background-size: 50px 50px;
             z-index: -1;
+            perspective: 500px;
         }
 
         #ui-layer {
@@ -58,11 +62,37 @@
         .heat-wrapper { margin-top: 5px; width: 100%; height: 4px; background: #333; border-radius: 2px; overflow: hidden; }
         .heat-fill { height: 100%; width: 0%; background: var(--primary); transition: width 0.1s linear; }
 
+        /* NOTIFICATIONS */
+        #notification-area {
+            position: absolute; top: 20%; left: 50%;
+            transform: translateX(-50%);
+            display: flex; flex-direction: column; align-items: center;
+            gap: 10px; z-index: 60; pointer-events: none;
+        }
+
+        .award-card {
+            background: rgba(0,0,0,0.95);
+            border: 2px solid var(--gold);
+            padding: 15px 25px;
+            border-radius: 4px;
+            display: flex; align-items: center; gap: 15px;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
+            animation: slideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), fadeOut 0.5s ease-in 3.5s forwards;
+            min-width: 280px;
+        }
+        .award-icon svg { width: 40px; height: 40px; }
+        .award-text h3 { margin: 0; font-family: 'Orbitron'; color: var(--gold); font-size: 1.1rem; }
+        .award-text p { margin: 0; color: #fff; font-size: 0.8rem; letter-spacing: 1px; }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; transform: scale(1.1); } }
+
+        /* MENUS */
         .menu-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(2, 2, 2, 0.9); z-index: 100;
+            background: rgba(2, 2, 2, 0.95); z-index: 100;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            backdrop-filter: blur(8px); transition: opacity 0.5s;
+            backdrop-filter: blur(10px); transition: opacity 0.4s;
         }
 
         h1 {
@@ -70,23 +100,53 @@
             text-transform: uppercase; letter-spacing: 6px; text-align: center;
             background: linear-gradient(180deg, #fff, var(--primary));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 10px var(--primary));
+            filter: drop-shadow(0 0 15px var(--primary));
         }
 
         .sub-text { margin-top: 10px; font-size: 1rem; color: #aaa; letter-spacing: 2px; text-align: center; }
 
+        .btn-group { display: flex; flex-direction: column; gap: 15px; margin-top: 40px; }
+
         .btn {
-            margin-top: 30px; padding: 15px 50px;
-            background: transparent; border: 2px solid var(--primary);
-            color: var(--primary); font-family: 'Orbitron'; font-size: 1.1rem;
-            font-weight: 900; letter-spacing: 2px; cursor: pointer;
+            padding: 15px 40px; min-width: 200px;
+            background: rgba(0, 243, 255, 0.05); border: 1px solid var(--primary);
+            color: var(--primary); font-family: 'Orbitron'; font-size: 1rem;
+            font-weight: 700; letter-spacing: 2px; cursor: pointer;
             transition: all 0.2s; position: relative; overflow: hidden;
-            pointer-events: auto;
+            pointer-events: auto; text-transform: uppercase;
         }
+        .btn:hover { background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary); }
+        .btn.secondary { border-color: var(--gold); color: var(--gold); }
+        .btn.secondary:hover { background: var(--gold); color: #000; box-shadow: 0 0 20px var(--gold); }
         
-        .btn:hover { background: var(--primary); color: #000; box-shadow: 0 0 30px var(--primary); }
-        .btn:active { transform: scale(0.95); }
         .hidden { opacity: 0; pointer-events: none; visibility: hidden; }
+
+        /* STORE / TROPHY ROOM */
+        #store-content {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;
+            margin-top: 30px; max-width: 600px; width: 90%;
+        }
+        .trophy-item {
+            background: rgba(255,255,255,0.05); border: 1px solid #333;
+            padding: 15px; border-radius: 4px; text-align: center;
+            transition: transform 0.2s;
+        }
+        .trophy-item.locked { opacity: 0.3; filter: grayscale(100%); }
+        .trophy-item.unlocked { border-color: var(--gold); background: rgba(255, 215, 0, 0.1); }
+        .trophy-item h4 { margin: 10px 0 5px; color: var(--gold); font-family: 'Orbitron'; font-size: 0.8rem; }
+        .trophy-item p { margin: 0; font-size: 0.7rem; color: #aaa; }
+
+        /* GAME OVER MISSION DEBRIEF */
+        .debrief-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
+            margin: 30px 0; width: 300px;
+        }
+        .debrief-stat {
+            background: rgba(255, 0, 60, 0.1); border: 1px solid var(--danger);
+            padding: 10px; text-align: center;
+        }
+        .debrief-val { font-family: 'Orbitron'; font-size: 1.5rem; color: white; }
+        .debrief-lbl { font-size: 0.7rem; color: var(--danger); letter-spacing: 1px; }
 
     </style>
 </head>
@@ -99,6 +159,7 @@
             <div class="stat-panel score-box">
                 <div class="stat-label">Score</div>
                 <div class="stat-value" id="ui-score">0</div>
+                <div class="stat-label" style="margin-top:5px; font-size:0.6rem">Kills: <span id="ui-kills" style="color:white">0</span></div>
             </div>
             
             <div class="stat-panel high-score-box">
@@ -112,27 +173,82 @@
                 <div class="heat-wrapper"><div class="heat-fill" id="ui-heat"></div></div>
             </div>
         </div>
+        
+        <div id="notification-area"></div>
     </div>
 
     <div id="start-screen" class="menu-screen">
-        <h1>Earth Defender</h1>
-        <div class="sub-text">TAP TO INITIALIZE SYSTEM</div>
-        <button class="btn" onclick="Game.start()">ENGAGE</button>
+        <h1>Earth Defender<br><span style="font-size:1.5rem; color:var(--accent)">ELITE</span></h1>
+        <div class="sub-text">SYSTEM READY. AWAITING INPUT.</div>
+        
+        <div class="btn-group">
+            <button class="btn" onclick="Game.start()">ENGAGE</button>
+            <button class="btn secondary" onclick="Game.openStore()">TROPHY ROOM</button>
+        </div>
+    </div>
+
+    <div id="store-screen" class="menu-screen hidden">
+        <h1 style="font-size: 2rem; color: var(--gold);">ACHIEVEMENT LOG</h1>
+        <div id="store-content">
+            </div>
+        <button class="btn" style="margin-top: 30px;" onclick="Game.closeStore()">BACK TO MENU</button>
     </div>
 
     <div id="game-over" class="menu-screen hidden">
-        <h1 style="background: linear-gradient(180deg, #fff, var(--danger)); -webkit-background-clip: text;">SYSTEM OFFLINE</h1>
-        <div class="sub-text">FINAL SCORE: <span id="final-score" style="color:white">0</span></div>
-        <div id="new-record-msg" style="color: var(--primary); font-weight:bold; margin-top:10px; opacity:0">NEW HIGH SCORE!</div>
-        <button class="btn" style="border-color: var(--danger); color: var(--danger)" onclick="Game.start()">REBOOT</button>
+        <h1 style="background: linear-gradient(180deg, #fff, var(--danger)); -webkit-background-clip: text;">MISSION FAILED</h1>
+        <div class="sub-text">SYSTEM OFFLINE // CRITICAL ERROR</div>
+        
+        <div class="debrief-grid">
+            <div class="debrief-stat">
+                <div class="debrief-val" id="final-score">0</div>
+                <div class="debrief-lbl">FINAL SCORE</div>
+            </div>
+            <div class="debrief-stat">
+                <div class="debrief-val" id="final-kills">0</div>
+                <div class="debrief-lbl">HOSTILES DOWN</div>
+            </div>
+        </div>
+
+        <div id="new-record-msg" style="color: var(--gold); font-family:'Orbitron'; font-size: 1.2rem; opacity:0; text-shadow: 0 0 10px var(--gold); margin-bottom: 20px;">NEW RECORD ESTABLISHED!</div>
+        
+        <div class="btn-group" style="margin-top: 10px;">
+            <button class="btn" style="border-color: var(--danger); color: var(--danger)" onclick="Game.start()">REBOOT SYSTEM</button>
+            <button class="btn" onclick="Game.toMenu()">MAIN MENU</button>
+        </div>
     </div>
 
     <canvas id="canvas"></canvas>
 
 <script>
-    /** SKY DEFENDER AUDIO ENGINE */
+    /** SKY DEFENDER AUDIO & STORAGE ENGINE */
     
-    // --- AUDIO SYSTEM (Web Audio API) ---
+    // --- STORAGE SYSTEM (New!) ---
+    const SaveSystem = {
+        key: 'earthdef_save_v2',
+        data: {
+            highScore: 0,
+            unlockedAwards: [] // Array of strings (ids)
+        },
+        init() {
+            const saved = localStorage.getItem(this.key);
+            if (saved) {
+                this.data = JSON.parse(saved);
+            }
+        },
+        save() {
+            localStorage.setItem(this.key, JSON.stringify(this.data));
+        },
+        unlockAward(id) {
+            if (!this.data.unlockedAwards.includes(id)) {
+                this.data.unlockedAwards.push(id);
+                this.save();
+                return true; // Newly unlocked
+            }
+            return false; // Already unlocked
+        }
+    };
+
+    // --- AUDIO SYSTEM ---
     const Sound = {
         ctx: null,
         init() {
@@ -156,16 +272,34 @@
         },
         shoot() { this.playTone('square', 800, 300, 0.1, 0.05); },
         hit() { this.playTone('sawtooth', 200, 50, 0.1, 0.05); },
+        award() { 
+            setTimeout(() => this.playTone('sine', 440, 440, 0.3, 0.1), 0); 
+            setTimeout(() => this.playTone('sine', 554, 554, 0.3, 0.1), 100); 
+            setTimeout(() => this.playTone('sine', 659, 659, 0.5, 0.1), 200); 
+        },
         explode() { this.playTone('sawtooth', 150, 10, 0.3, 0.1); },
         gameOver() { this.playTone('triangle', 300, 50, 1.0, 0.2); }
     };
 
-    // --- ASSETS (Aliens) ---
+    // --- ASSETS ---
     const ASSETS = {
         player: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='0%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2300f3ff'/%3E%3Cstop offset='100%25' stop-color='%23005577'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M50 2 L65 30 L95 65 L60 60 L60 85 L70 95 L50 90 L30 95 L40 85 L40 60 L5 65 L35 30 Z' fill='url(%23g)' stroke='white' stroke-width='1.5'/%3E%3Crect x='48' y='35' width='4' height='15' fill='%23ccfeff'/%3E%3C/svg%3E",
         enemy1: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 4 C15 4 8 25 8 40 C8 55 20 62 32 62 C44 62 56 55 56 40 C56 25 49 4 32 4 Z' fill='%23111' stroke='%23bc13fe' stroke-width='2'/%3E%3Cellipse cx='22' cy='35' rx='8' ry='12' transform='rotate(15 22 35)' fill='%23bc13fe'/%3E%3Cellipse cx='42' cy='35' rx='8' ry='12' transform='rotate(-15 42 35)' fill='%23bc13fe'/%3E%3C/svg%3E",
         enemy2: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cellipse cx='32' cy='40' rx='30' ry='12' fill='%23220000' stroke='%23ff003c' stroke-width='2'/%3E%3Cpath d='M17 32 Q32 10 47 32' fill='%23ff003c' opacity='0.5'/%3E%3Ccircle cx='10' cy='40' r='3' fill='%23ff003c'/%3E%3Ccircle cx='32' cy='48' r='3' fill='%23ff003c'/%3E%3Ccircle cx='54' cy='40' r='3' fill='%23ff003c'/%3E%3C/svg%3E"
     };
+
+    const SVG_ICONS = {
+        award100: `<svg viewBox="0 0 100 100" fill="none" stroke="#cd7f32" stroke-width="5"><circle cx="50" cy="50" r="45" fill="#3d2b1f"/><path d="M50 10 L50 90 M10 50 L90 50" stroke-opacity="0.5"/><circle cx="50" cy="50" r="20" stroke="white"/><path d="M50 20 L60 40 L80 50 L60 60 L50 80 L40 60 L20 50 L40 40 Z" fill="#cd7f32"/></svg>`,
+        award200: `<svg viewBox="0 0 100 100" fill="none" stroke="#c0c0c0" stroke-width="5"><path d="M50 5 L85 25 L85 75 L50 95 L15 75 L15 25 Z" fill="#2a2a2a"/><path d="M30 40 L50 70 L70 40" stroke="red" fill="none"/><circle cx="35" cy="35" r="5" fill="red"/><circle cx="65" cy="35" r="5" fill="red"/></svg>`,
+        award1000: `<svg viewBox="0 0 100 100" fill="none" stroke="#ffd700" stroke-width="4"><circle cx="50" cy="50" r="45" fill="#332a00" stroke-dasharray="10 5"/><path d="M50 15 L60 35 L85 35 L65 55 L75 80 L50 65 L25 80 L35 55 L15 35 L40 35 Z" fill="#ffd700" stroke="white"/><circle cx="50" cy="50" r="10" fill="white"/></svg>`
+    };
+
+    // Define Trophy Data
+    const TROPHIES = [
+        { id: 'HUNTER', title: 'HUNTER', desc: 'Eliminate 100 Hostiles', icon: SVG_ICONS.award100, req: 100 },
+        { id: 'SLAYER', title: 'SLAYER', desc: 'Eliminate 200 Hostiles', icon: SVG_ICONS.award200, req: 200 },
+        { id: 'LEGEND', title: 'LEGEND', desc: 'Eliminate 1000 Hostiles', icon: SVG_ICONS.award1000, req: 1000 }
+    ];
 
     const IMG = {};
     for (let k in ASSETS) { IMG[k] = new Image(); IMG[k].src = ASSETS[k]; }
@@ -179,23 +313,24 @@
         state: {
             active: false,
             score: 0,
-            highScore: localStorage.getItem('skydef_highscore') || 0,
             hp: 100,
             heat: 0,
+            kills: 0,
             frame: 0,
             firing: false
         },
 
-        player: { x: 0, y: 0, tx: 0, tilt: 0, w: 70, h: 70 },
+        player: { x: 0, y: 0, vx: 0, tx: 0, tilt: 0, w: 70, h: 70 },
         bullets: [], enemies: [], particles: [], shake: 0,
 
         init() {
+            SaveSystem.init();
             this.resize();
             window.addEventListener('resize', () => this.resize());
             
             // Input Handlers
             const startFire = (x) => { this.player.tx = x; this.state.firing = true; };
-            const moveFire = (x) => { if(this.state.firing) this.player.tx = x; };
+            const moveFire = (x) => { this.player.tx = x; }; 
             const stopFire = () => { this.state.firing = false; };
 
             this.canvas.addEventListener('mousedown', (e) => startFire(e.clientX));
@@ -209,10 +344,13 @@
             // Loop
             const loop = () => {
                 if(this.state.active) { this.update(); this.draw(); }
+                else if (this.particles.length > 0) {
+                    this.drawParticlesOnly(); // Keep showing confetti
+                }
                 requestAnimationFrame(loop);
             };
             loop();
-            document.getElementById('ui-highscore').innerText = this.state.highScore;
+            document.getElementById('ui-highscore').innerText = SaveSystem.data.highScore;
         },
 
         resize() {
@@ -228,11 +366,13 @@
 
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('game-over').classList.add('hidden');
+            document.getElementById('notification-area').innerHTML = '';
             
             this.state.active = true;
             this.state.score = 0;
             this.state.hp = 100;
             this.state.heat = 0;
+            this.state.kills = 0;
             this.state.firing = false;
             this.state.frame = 0;
             this.bullets = [];
@@ -242,43 +382,64 @@
             this.player.x = this.width / 2;
             this.player.y = this.height - 120;
             this.player.tx = this.width / 2;
+            this.player.vx = 0;
             
             this.updateHUD();
+        },
+
+        toMenu() {
+            document.getElementById('game-over').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+            document.getElementById('store-screen').classList.add('hidden');
+            this.state.active = false;
         },
 
         update() {
             const S = this.state;
             const P = this.player;
 
-            // 1. PLAYER
-            let dx = P.tx - P.x;
-            P.x += dx * 0.25; 
-            P.tilt += (-(dx * 0.3) - P.tilt) * 0.2;
-            if(P.x < 30) P.x = 30; if(P.x > this.width - 30) P.x = this.width - 30;
+            // 1. PLAYER PHYSICS
+            let dist = P.tx - P.x;
+            P.vx += dist * 0.08;
+            P.vx *= 0.85;
+            P.x += P.vx;
+            P.tilt = -P.vx * 1.5;
+            
+            if(P.x < 30) { P.x = 30; P.vx *= -0.5; }
+            if(P.x > this.width - 30) { P.x = this.width - 30; P.vx *= -0.5; }
 
             // 2. SHOOTING
-            if(S.firing && S.heat < 100 && S.frame % 7 === 0) {
-                this.bullets.push({ x: P.x, y: P.y - 30, w: 4, h: 20 });
-                S.heat += 5;
-                this.shake = 3;
+            if(S.firing && S.heat < 100 && S.frame % 6 === 0) {
+                this.bullets.push({ x: P.x - 15, y: P.y - 20, w: 4, h: 20 });
+                this.bullets.push({ x: P.x + 15, y: P.y - 20, w: 4, h: 20 });
+                S.heat += 4;
+                this.shake = 2;
                 Sound.shoot();
             }
-            if(!S.firing && S.heat > 0) S.heat -= 1.5;
+            if(!S.firing && S.heat > 0) S.heat -= 1.2;
             if(S.heat < 0) S.heat = 0;
 
-            // 3. ENEMY SPAWNING (Rebalanced)
-            // Start very slow (every ~150 frames), get faster as score increases, cap at 40 frames
-            let spawnRate = Math.max(40, 150 - Math.floor(S.score / 50));
+            // 3. ENEMY SPAWNING (Dynamic Difficulty)
+            let difficulty = Math.min(S.kills / 50, 5); 
+            let spawnRate = Math.max(25, 100 - (difficulty * 15));
             
-            // Hard Limit: Only 8 aliens allowed on screen
-            if(S.frame % spawnRate === 0 && this.enemies.length < 8) {
-                this.spawnEnemy();
+            if(S.frame % Math.floor(spawnRate) === 0 && this.enemies.length < 12) {
+                this.spawnEnemy(difficulty);
             }
 
             // 4. ENTITY UPDATES
             for(let i = this.enemies.length - 1; i >= 0; i--) {
                 let e = this.enemies[i];
                 e.vy += e.gravity;
+                
+                // --- NEW MOVEMENT LOGIC: Straight -> Twisted ---
+                // Calculate wobble factor based on Kills (0 to 1)
+                // If kills < 10, wobble is almost 0 (straight)
+                // If kills > 50, wobble is 1 (max twist)
+                let wobbleFactor = Math.min(Math.max(0, S.kills - 5) / 45, 1);
+                
+                // Apply wobble
+                e.x += Math.sin((e.y + S.frame) * 0.05) * (e.isHeavy ? 1 : 2.5) * wobbleFactor;
                 e.y += e.vy;
 
                 // Collision
@@ -288,13 +449,17 @@
                         this.bullets.splice(j, 1);
                         e.hp--;
                         Sound.hit();
-                        this.createExplosion(b.x, b.y, '#fff', 3);
+                        this.createExplosion(b.x, b.y, '#fff', 2, 0); 
                         
                         if(e.hp <= 0) {
                             Sound.explode();
-                            this.createExplosion(e.x, e.y, e.color, 15);
+                            this.createExplosion(e.x, e.y, e.color, 12, 1);
                             this.enemies.splice(i, 1);
+                            
                             S.score += e.scoreVal;
+                            S.kills++;
+                            this.checkAwards();
+                            
                             this.shake = 6;
                             this.updateHUD();
                         }
@@ -303,31 +468,44 @@
                 }
                 if(e && e.y > this.height) {
                     this.enemies.splice(i, 1);
-                    S.hp -= 15;
-                    this.shake = 20;
+                    S.hp -= e.isHeavy ? 25 : 15;
+                    this.shake = 15;
                     this.updateHUD();
                     if(S.hp <= 0) this.gameOver();
                 }
             }
 
+            // Bullets
             for(let i = this.bullets.length - 1; i >= 0; i--) {
                 this.bullets[i].y -= 25;
                 if(this.bullets[i].y < -50) this.bullets.splice(i, 1);
             }
+
+            // Particles
+            this.updateParticles();
+            S.frame++;
+        },
+
+        updateParticles() {
             for(let i = this.particles.length - 1; i >= 0; i--) {
                 let p = this.particles[i];
-                p.x += p.vx; p.y += p.vy; p.life -= 0.05;
+                p.x += p.vx; p.y += p.vy; 
+                p.vy += 0.1; p.vx *= 0.95; p.vy *= 0.95;
+                p.life -= p.decay;
                 if(p.life <= 0) this.particles.splice(i, 1);
             }
-            S.frame++;
         },
 
         draw() {
             const ctx = this.ctx; const w = this.width; const h = this.height;
+            
+            // Screen Shake
             ctx.save();
             if(this.shake > 0) {
-                let s = this.shake; ctx.translate((Math.random()-0.5)*s, (Math.random()-0.5)*s);
-                this.shake *= 0.9; if(this.shake < 0.5) this.shake = 0;
+                let s = this.shake; 
+                ctx.translate((Math.random()-0.5)*s, (Math.random()-0.5)*s);
+                this.shake *= 0.9; 
+                if(this.shake < 0.5) this.shake = 0;
             }
             ctx.clearRect(0, 0, w, h);
 
@@ -335,8 +513,13 @@
             ctx.save(); ctx.translate(this.player.x, this.player.y);
             ctx.rotate(this.player.tilt * Math.PI / 180); 
             ctx.drawImage(IMG.player, -35, -35, 70, 70);
-            ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#00f3ff';
-            ctx.beginPath(); ctx.moveTo(-6, 30); ctx.lineTo(6, 30); ctx.lineTo(0, 50 + Math.random()*25); ctx.fill();
+            
+            // Engine Glow
+            ctx.globalCompositeOperation = 'lighter'; 
+            ctx.fillStyle = '#00f3ff';
+            ctx.beginPath(); 
+            let flameH = 30 + Math.random()*20 + (this.state.firing ? 20 : 0);
+            ctx.moveTo(-6, 30); ctx.lineTo(6, 30); ctx.lineTo(0, 30 + flameH); ctx.fill();
             ctx.restore();
 
             // Bullets
@@ -348,12 +531,9 @@
             this.enemies.forEach(e => ctx.drawImage(IMG[e.type], e.x - e.w/2, e.y - e.h/2, e.w, e.h));
 
             // Particles
-            this.particles.forEach(p => {
-                ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, 4, 4);
-            });
-            ctx.globalAlpha = 1.0;
+            this.drawParticles(ctx);
 
-            // Low Health Red Overlay
+            // Damage Overlay
             if(this.state.hp < 30) {
                 ctx.fillStyle = `rgba(255, 0, 60, ${0.1 + Math.sin(this.state.frame * 0.1)*0.1})`;
                 ctx.fillRect(0,0,w,h);
@@ -361,39 +541,90 @@
             ctx.restore();
         },
 
-        spawnEnemy() {
-            let isHeavy = Math.random() > 0.8;
-            let scoreFactor = Math.min(this.state.score / 2000, 1); // 0 to 1 based on score
-            
-            // GRAVITY: Start extremely low (0.015) and cap at (0.05)
-            // This makes them float initially, then get heavier as you play.
-            let gravity = 0.015 + (scoreFactor * 0.035); 
+        drawParticlesOnly() {
+            const ctx = this.ctx;
+            ctx.clearRect(0, 0, this.width, this.height);
+            this.updateParticles();
+            this.drawParticles(ctx);
+        },
+
+        drawParticles(ctx) {
+            this.particles.forEach(p => {
+                ctx.globalAlpha = p.life; 
+                ctx.fillStyle = p.color; 
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1.0;
+        },
+
+        spawnEnemy(difficulty) {
+            let isHeavy = Math.random() < (0.2 + difficulty * 0.1); 
+            let gravity = 0.05 + (difficulty * 0.02); 
 
             this.enemies.push({
                 x: Math.random() * (this.width - 60) + 30,
                 y: -60,
                 vy: 0,
-                gravity: gravity,
-                hp: isHeavy ? 4 : 1,
+                gravity: isHeavy ? gravity * 1.5 : gravity,
+                hp: isHeavy ? 5 : 1,
                 type: isHeavy ? 'enemy2' : 'enemy1',
                 color: isHeavy ? '#ff003c' : '#bc13fe',
                 w: isHeavy ? 60 : 45,
                 h: isHeavy ? 60 : 45,
-                scoreVal: isHeavy ? 300 : 100
+                scoreVal: isHeavy ? 300 : 100,
+                isHeavy: isHeavy
             });
         },
 
-        createExplosion(x, y, color, count) {
+        createExplosion(x, y, color, count, type) {
             for(let i=0; i<count; i++) {
+                let speed = type === 2 ? 15 : 8;
+                let decay = type === 2 ? 0.005 : 0.03;
+                let size = type === 2 ? Math.random()*6 + 2 : Math.random()*3 + 1;
+                
                 this.particles.push({
-                    x, y, vx: (Math.random()-0.5)*12, vy: (Math.random()-0.5)*12,
-                    life: 1.0, color: color
+                    x, y, 
+                    vx: (Math.random()-0.5) * speed, 
+                    vy: (Math.random()-0.5) * speed,
+                    life: 1.0, 
+                    decay: decay,
+                    color: type === 2 ? `hsl(${Math.random()*360}, 100%, 50%)` : color,
+                    size: size
                 });
             }
         },
 
+        checkAwards() {
+            const k = this.state.kills;
+            TROPHIES.forEach(t => {
+                if(k === t.req) {
+                    this.triggerAward(t);
+                }
+            });
+        },
+
+        triggerAward(trophy) {
+            // Save to LocalStorage
+            const isNew = SaveSystem.unlockAward(trophy.id);
+            
+            // Only show pop-up if it's happening in-game
+            Sound.award();
+            const box = document.getElementById('notification-area');
+            const el = document.createElement('div');
+            el.className = 'award-card';
+            el.innerHTML = `
+                <div class="award-icon">${trophy.icon}</div>
+                <div class="award-text"><h3>${trophy.title} UNLOCKED</h3><p>${trophy.desc}</p></div>
+            `;
+            box.appendChild(el);
+            setTimeout(() => el.remove(), 4000);
+        },
+
         updateHUD() {
             document.getElementById('ui-score').innerText = this.state.score;
+            document.getElementById('ui-kills').innerText = this.state.kills;
             const hpEl = document.getElementById('ui-hp');
             hpEl.innerText = Math.max(0, this.state.hp) + "%";
             hpEl.style.color = this.state.hp < 30 ? 'var(--danger)' : 'white';
@@ -402,17 +633,53 @@
             heatFill.style.background = this.state.heat > 80 ? 'var(--danger)' : 'var(--primary)';
         },
 
+        openStore() {
+            const screen = document.getElementById('store-screen');
+            const content = document.getElementById('store-content');
+            content.innerHTML = ''; // Clear prev
+
+            TROPHIES.forEach(t => {
+                const unlocked = SaveSystem.data.unlockedAwards.includes(t.id);
+                const div = document.createElement('div');
+                div.className = `trophy-item ${unlocked ? 'unlocked' : 'locked'}`;
+                div.innerHTML = `
+                    <div style="width: 50px; height: 50px; margin: 0 auto;">${t.icon}</div>
+                    <h4>${t.title}</h4>
+                    <p>${t.desc}</p>
+                    <p style="color:${unlocked ? '#0f0' : '#555'}">${unlocked ? 'ACQUIRED' : 'LOCKED'}</p>
+                `;
+                content.appendChild(div);
+            });
+
+            document.getElementById('start-screen').classList.add('hidden');
+            screen.classList.remove('hidden');
+        },
+
+        closeStore() {
+            document.getElementById('store-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+        },
+
         gameOver() {
             this.state.active = false;
             Sound.gameOver();
+            
+            // Populate Game Over Screen
             document.getElementById('final-score').innerText = this.state.score;
+            document.getElementById('final-kills').innerText = this.state.kills;
+            
             const newRecordMsg = document.getElementById('new-record-msg');
-            if(this.state.score > this.state.highScore) {
-                this.state.highScore = this.state.score;
-                localStorage.setItem('skydef_highscore', this.state.highScore);
+            
+            if(this.state.score > SaveSystem.data.highScore) {
+                SaveSystem.data.highScore = this.state.score;
+                SaveSystem.save(); // Save to LocalStorage
+                
                 newRecordMsg.style.opacity = 1;
-                document.getElementById('ui-highscore').innerText = this.state.highScore;
-            } else { newRecordMsg.style.opacity = 0; }
+                document.getElementById('ui-highscore').innerText = SaveSystem.data.highScore;
+                this.createExplosion(this.width/2, this.height/2, null, 150, 2); // Confetti
+            } else { 
+                newRecordMsg.style.opacity = 0; 
+            }
             document.getElementById('game-over').classList.remove('hidden');
         }
     };
